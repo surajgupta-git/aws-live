@@ -12,4 +12,4 @@ sudo apt-get install python3-boto3
 # for running application
 sudo python3 Empapp.py
 
-To test it out: try http://3.17.143.95/ in browser
+To test it out: try !(http://3.17.143.95:80) in browser
