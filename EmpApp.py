@@ -42,7 +42,7 @@ def AddEmp():
     pri_skill = request.form['pri_skill']
     location = request.form['location']
     emp_image_file = request.files['emp_image_file']
-  
+
     insert_sql = "INSERT INTO employee VALUES (%s, %s, %s, %s, %s)"
     cursor = db_conn.cursor()
 
@@ -50,16 +50,14 @@ def AddEmp():
         return "Please select a file"
 
     try:
-        
-        cursor.execute(insert_sql,(emp_id, first_name, last_name, pri_skill, location))
+
+        cursor.execute(insert_sql, (emp_id, first_name, last_name, pri_skill, location))
         db_conn.commit()
         emp_name = "" + first_name + " " + last_name
         # Uplaod image file in S3 #
-        emp_image_file_name_in_s3 = "emp-id-"+str(emp_id) + "_image_file"
+        emp_image_file_name_in_s3 = "emp-id-" + str(emp_id) + "_image_file"
         s3 = boto3.resource('s3')
 
-        
-        
         try:
             print("Data inserted in MySQL RDS... uploading image to S3...")
             s3.Bucket(custombucket).put_object(Key=emp_image_file_name_in_s3, Body=emp_image_file)
@@ -76,28 +74,6 @@ def AddEmp():
                 custombucket,
                 emp_image_file_name_in_s3)
 
-            # Save image file metadata in DynamoDB #
-            print("Uploading to S3 success... saving metadata in dynamodb...")
-        
-            
-            try:
-                dynamodb_client = boto3.client('dynamodb', region_name='ap-south-1')
-                dynamodb_client.put_item(
-                 TableName='employee_image_table',
-                    Item={
-                     'empid': {
-                          'N': emp_id
-                      },
-                      'image_url': {
-                            'S': object_url
-                        }
-                    }
-                )
-
-            except Exception as e:
-                program_msg = "Flask could not update DynamoDB table with S3 object URL"
-                return str(e)
-        
         except Exception as e:
             return str(e)
 
